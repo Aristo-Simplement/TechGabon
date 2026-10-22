@@ -1,40 +1,14 @@
-import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
-import { ensureTables, seedCompanies } from '@/lib/db';
+import { profileHandlers } from '@/lib/profileApi';
+import { companyInput, publicCompany } from '@/lib/records';
+import { scoreCompany } from '@/lib/scoring';
 
-export async function GET() {
-  await ensureTables();
-  let { rows } = await sql`SELECT data FROM companies ORDER BY created_at ASC`;
+const api = profileHandlers({
+  table: 'companies',
+  kind: 'company',
+  input: companyInput,
+  publicView: publicCompany,
+  score: (r) => scoreCompany(r),
+  displayName: (r) => r.nom,
+});
 
-  if (rows.length === 0) {
-    const seed = seedCompanies();
-    for (const record of seed) {
-      await sql`INSERT INTO companies (id, data) VALUES (${record.id}, ${JSON.stringify(record)}::jsonb)
-                ON CONFLICT (id) DO NOTHING`;
-    }
-    rows = seed.map((data) => ({ data }));
-  }
-
-  return NextResponse.json(rows.map((r) => r.data));
-}
-
-export async function POST(request) {
-  await ensureTables();
-  let record;
-  try {
-    record = await request.json();
-  } catch (e) {
-    return NextResponse.json({ error: 'JSON invalide' }, { status: 400 });
-  }
-  if (!record || !record.id) {
-    return NextResponse.json({ error: 'id manquant' }, { status: 400 });
-  }
-  try {
-    await sql`INSERT INTO companies (id, data) VALUES (${record.id}, ${JSON.stringify(record)}::jsonb)
-              ON CONFLICT (id) DO UPDATE SET data = ${JSON.stringify(record)}::jsonb`;
-    return NextResponse.json(record);
-  } catch (e) {
-    console.error('[TECHGABON] POST /api/companies error:', e);
-    return NextResponse.json({ error: "Échec de l'enregistrement" }, { status: 500 });
-  }
-}
+export const { GET, POST } = api;

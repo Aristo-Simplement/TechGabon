@@ -1,15 +1,12 @@
-import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
-import { ensureTables } from '@/lib/db';
+import { profileHandlers } from '@/lib/profileApi';
+import { companyInput, publicCompany } from '@/lib/records';
+import { scoreCompany } from '@/lib/scoring';
 
-export async function DELETE(request, { params }) {
-  await ensureTables();
-  const { id } = await params;
-  try {
-    await sql`DELETE FROM companies WHERE id = ${id}`;
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error('[TECHGABON] DELETE /api/companies/[id] error:', e);
-    return NextResponse.json({ error: 'Échec de la suppression' }, { status: 500 });
-  }
-}
+export const { DELETE } = profileHandlers({
+  table: 'companies',
+  kind: 'company',
+  input: companyInput,
+  publicView: publicCompany,
+  score: (r) => scoreCompany(r),
+  displayName: (r) => r.nom,
+});

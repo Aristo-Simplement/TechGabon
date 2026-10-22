@@ -6,24 +6,24 @@
 :root {
   --radius: 0.65rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.17 0.012 255);
+  --foreground: oklch(0.2 0.04 258);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.012 255);
+  --card-foreground: oklch(0.2 0.04 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.012 255);
-  --primary: oklch(0.5 0.16 258);
+  --popover-foreground: oklch(0.2 0.04 258);
+  --primary: oklch(0.3 0.08 258);
   --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.008 255);
-  --secondary-foreground: oklch(0.25 0.02 255);
-  --muted: oklch(0.96 0.008 255);
-  --muted-foreground: oklch(0.48 0.015 255);
-  --accent: oklch(0.7 0.14 68);
-  --accent-foreground: oklch(0.22 0.03 60);
+  --secondary: oklch(0.965 0.008 258);
+  --secondary-foreground: oklch(0.25 0.05 258);
+  --muted: oklch(0.965 0.008 258);
+  --muted-foreground: oklch(0.5 0.025 258);
+  --accent: oklch(0.77 0.13 78);
+  --accent-foreground: oklch(0.22 0.05 258);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.9 0.005 255);
-  --input: oklch(0.9 0.005 255);
-  --ring: oklch(0.5 0.16 258);
+  --border: oklch(0.91 0.008 258);
+  --input: oklch(0.89 0.01 258);
+  --ring: oklch(0.77 0.13 78);
 }
 
 .dark {
@@ -80,6 +80,68 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
+}
+
+/* Navy + gold brand palette used by the marketing sections */
+@theme {
+  --color-navy-950: #071226;
+  --color-navy-900: #0b1b36;
+  --color-navy-800: #12294d;
+  --color-navy-700: #1b3866;
+  --color-gold-300: #f0d08a;
+  --color-gold-400: #e5b85a;
+  --color-gold-500: #d4a03a;
+  /* darker gold for small text on light backgrounds (contrast ≥ 5:1, WCAG AA) */
+  --color-gold-700: #8a6116;
+}
+
+/* Centered page container with comfortable side margins on every screen size */
+@utility container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Google Translate (loaded only when a visitor picks another language): hide its banner,
+   tooltips and highlight so the site keeps its own look. */
+.goog-te-banner-frame,
+.skiptranslate > iframe,
+iframe.skiptranslate,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-yAWNEb-L7lbkb {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Métiers / Secteurs photos: a newly shown photo fades in */
+@keyframes photo-swap-in {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
+}
+.photo-swap {
+  animation: photo-swap-in 0.9s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-swap { animation: none; }
+}
+
+/* Visible keyboard focus everywhere (accessibility) */
+:focus-visible {
+  outline: 2px solid #8a6116;
+  outline-offset: 2px;
 }

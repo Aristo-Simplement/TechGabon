@@ -1,4 +1,4 @@
-# TECHGABON
+# ONASKILL
 
 Prototype de plateforme mettant en relation entreprises, particuliers et professionnels
 techniques vérifiés au Gabon. Construit avec Next.js, Tailwind CSS v4 et shadcn/ui.
@@ -54,33 +54,75 @@ Tu obtiens alors une vraie adresse du type `https://techgabon-xxxx.vercel.app` �
 c'est ton lien à partager. Chaque fois que tu enverras une modification vers GitHub
 (`git push`), Vercel republiera automatiquement le site.
 
-## Vérification par e-mail (activer les envois réels)
+## Envoi des e-mails (confirmation d'inscription, mot de passe oublié)
 
-À l'inscription, un profil professionnel ou une fiche entreprise est créé avec le statut
-"non vérifié", et un e-mail de confirmation est envoyé automatiquement.
+Le site envoie deux sortes d'e-mails : le lien de confirmation à l'inscription, et le lien
+« Mot de passe oublié » (qui sert aussi à activer un compte pour un profil créé avant
+l'arrivée des comptes). **Sans configuration**, rien n'est envoyé : le lien s'affiche dans
+les logs du serveur.
 
-**Sans configuration**, l'e-mail n'est pas réellement envoyé : le lien de confirmation
-s'affiche dans les logs du serveur (utile en développement). Pour activer l'envoi réel :
+Les identifiants se mettent **uniquement** dans Vercel → Project Settings → Environment
+Variables (jamais dans le code), puis il faut redéployer. Choisir **une** des deux options :
 
-1. Crée un compte gratuit sur [resend.com](https://resend.com).
-2. Vérifie un domaine d'envoi (ou utilise leur domaine de test `onboarding@resend.dev`
-   pour commencer).
-3. Génère une clé API sur Resend.
-4. Ajoute-la comme variable d'environnement :
-   - **En local** : crée un fichier `.env.local` à la racine du projet avec
-     `RESEND_API_KEY=re_ta_cle_ici`
-   - **Sur Vercel** : Project Settings → Environment Variables → ajoute `RESEND_API_KEY`,
-     puis redéploie.
-5. Ouvre `app/api/send-verification/route.js` et remplace `FROM_EMAIL` par une adresse
-   de ton domaine vérifié une fois prêt.
+### Option A — Gmail (gratuit, sans nom de domaine, ~500 e-mails/jour)
+1. Utiliser une adresse Gmail dédiée au site (par ex. `onaskill.contact@gmail.com`).
+2. Sur ce compte Google : activer la **validation en deux étapes**, puis créer un
+   **mot de passe d'application** (Compte Google → Sécurité → Mots de passe des applications).
+3. Dans Vercel, ajouter :
+   - `SMTP_HOST` = `smtp.gmail.com`
+   - `SMTP_PORT` = `465`
+   - `SMTP_USER` = l'adresse Gmail
+   - `SMTP_PASS` = le mot de passe d'application (16 lettres)
+   - `FROM_EMAIL` = `ONASKILL <l'adresse Gmail>`
 
-**Limite importante à connaître** : ce prototype stocke les comptes dans le
-`localStorage` du navigateur, pas dans une vraie base de données. Le lien de
-confirmation ne fonctionne donc que si on l'ouvre **depuis le même appareil et le même
-navigateur** que ceux utilisés à l'inscription. Pour une vérification fiable depuis
-n'importe quel appareil (cas normal en production), il faut migrer `professionals` et
-`companies` vers une vraie base de données (Supabase, Neon, etc.) — l'API et la page
-`/verify` sont déjà structurées pour accueillir ce changement facilement.
+### Option B — Resend (nécessite un nom de domaine, ex. onaskill.com)
+1. Créer un compte sur resend.com et y **vérifier le domaine** (ajout d'enregistrements DNS).
+2. Dans Vercel, ajouter `RESEND_API_KEY` = la clé Resend, et
+   `FROM_EMAIL` = `ONASKILL <contact@ton-domaine>`.
+
+Sans domaine vérifié, Resend n'envoie qu'à l'adresse du propriétaire du compte Resend.
+
+### Optionnel — `SESSION_SECRET`
+Les sessions de connexion sont signées avec une clé dérivée de la base de données. Pour
+utiliser une clé dédiée, ajouter `SESSION_SECRET` (une longue chaîne aléatoire) dans
+Vercel. Attention : la changer déconnecte tout le monde.
+
+## Stockage privé des documents (CV, diplômes)
+
+Dans Vercel : projet → **Storage** → **Create** → **Blob** → le connecter au projet.
+Vercel ajoute alors automatiquement la variable `BLOB_READ_WRITE_TOKEN` ; redéployer.
+Les documents sont ensuite rangés dans un stockage **privé** (aucune adresse publique) et
+seul leur propriétaire peut les ouvrir, via `/api/files/...`. Sans ce stockage, les
+documents restent dans la base de données (fonctionne, mais limité en taille).
+
+## Espace d'administration (modération)
+
+1. Dans Vercel, ajouter `ADMIN_EMAILS` = ton adresse e-mail (plusieurs adresses possibles,
+   séparées par des virgules), puis redéployer.
+2. Sur le site, créer un compte **avec cette adresse** (par ex. un compte particulier) et
+   **confirmer l'adresse** grâce au lien reçu par e-mail (l'envoi d'e-mails doit donc être
+   configuré). Sans confirmation, l'accès administrateur reste fermé.
+3. Le bouton « Administration » apparaît alors dans l'en-tête : on peut y masquer, rendre
+   visible ou supprimer un profil, une fiche entreprise, un compte particulier ou une demande.
+
+## Statistiques de visite
+
+Dans Vercel : projet → **Analytics** → **Enable**. Statistiques anonymes, sans cookie.
+
+## Nom de domaine
+
+1. Acheter le domaine (par ex. onaskill.com) chez un registraire.
+2. Vercel → projet → **Settings → Domains** → ajouter le domaine et suivre les
+   instructions DNS affichées.
+3. Ajouter la variable `NEXT_PUBLIC_SITE_URL` = `https://ton-domaine` (sans `/` final),
+   puis redéployer : liens de partage, sitemap et e-mails utiliseront ce domaine.
+
+## Développement local
+
+Sans `POSTGRES_URL`, le site utilise une base locale enregistrée dans `.data/dev-db.json`
+(ignorée par git) qui survit aux redémarrages. Supprimer ce dossier repart de zéro. Pour
+travailler sur la vraie base, copier les variables de la base Vercel (Storage → ta base →
+`.env.local`) dans un fichier `.env.local` à la racine.
 
 ## Connecter la base de données (étape désormais nécessaire)
 
